@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { FiImage } from 'react-icons/fi';
 import { useAuth } from './hooks/useAuth';
 import Header from './components/Header';
-import { imageApi } from './services/api';
+import { imageApi } from './services/api'; 
 import AuthModal from './components/AuthModal';
 import UploadPanel from './components/UploadPanel';
 import PreviewPanel from './components/PreviewPanel';
@@ -10,7 +10,8 @@ import ControlsPanel from './components/ControlsPanel';
 import Gallery from './components/Gallery';
 
 export default function App() {
-  const { user, login, logout } = useAuth();
+  const { user, login, register, logout } = useAuth(); // ← ДОБАВЛЕН register
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false); // ← ДОБАВЛЕНО состояние модалки
   const [selectedFile, setSelectedFile] = useState(null);
   const [processedUrl, setProcessedUrl] = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -59,6 +60,15 @@ export default function App() {
     }
   };
 
+  // Функция для проверки, авторизован ли пользователь перед обработкой
+  const handleProcessClick = () => {
+    if (!user) {
+      setIsAuthModalOpen(true);
+      return;
+    }
+    handleProcess();
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -68,7 +78,11 @@ export default function App() {
             <FiImage />
             <span>Smart Image Lab</span>
           </div>
-          <Header user={user} onLogin={login} onLogout={logout} />
+          <Header 
+            user={user} 
+            onLogin={() => setIsAuthModalOpen(true)}  // ← Открываем модалку вместо прямого вызова login
+            onLogout={logout} 
+          />
         </div>
       </header>
 
@@ -94,7 +108,7 @@ export default function App() {
               />
               
               <button
-                onClick={handleProcess}
+                onClick={handleProcessClick}  // ← ИСПРАВЛЕНО: используем новую функцию
                 disabled={!selectedFile || !selectedOperation || isProcessing}
                 className="w-full py-3 bg-indigo-600 text-white rounded-xl font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:bg-indigo-700 transition-colors"
               >
@@ -113,6 +127,14 @@ export default function App() {
           <Gallery user={user} />
         </div>
       </main>
+
+      {/* Модальное окно авторизации - ДОБАВЛЕНО */}
+      <AuthModal
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
+        onLogin={login}
+        onRegister={register}
+      />
     </div>
   );
 }

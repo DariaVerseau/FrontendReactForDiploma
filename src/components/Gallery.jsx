@@ -1,68 +1,86 @@
-import { useEffect, useState } from 'react';
+// src/components/Gallery.jsx
+import { useState, useEffect } from 'react';
 import { imageApi } from '../services/api';
-import Card from './ui/Card';
 
 export default function Gallery({ user }) {
-  const [images, setImages] = useState([]);
+  const [images, setImages] = useState([]); // ← Убедитесь, что начальное значение [], а не null
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    if (!user) return;
-    
-    const loadGallery = async () => {
-      setLoading(true);
-      try {
-        const res = await imageApi.getGallery();
-        setImages(res.data);
-      } catch (error) {
-        console.error('Gallery load error:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadGallery();
+    if (user) {
+      loadGallery();
+    }
   }, [user]);
 
+  const loadGallery = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await imageApi.getGallery();
+      // ✅ Защита: убеждаемся, что response.data - это массив
+      setImages(Array.isArray(response.data) ? response.data : []);
+    } catch (error) {
+      console.error('Gallery load error:', error);
+      setError('Не удалось загрузить галерею');
+      setImages([]); // ← Устанавливаем пустой массив при ошибке
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ✅ Защита при рендеринге
   if (!user) {
     return (
-      <Card>
-        <h2 className="text-xl font-bold mb-4">Ваша галерея</h2>
-        <p className="text-gray-500">Войдите, чтобы увидеть обработанные изображения</p>
-      </Card>
+      <div className="bg-white rounded-xl shadow-sm p-6">
+        <h3 className="text-lg font-medium mb-4">Галерея</h3>
+        <p className="text-gray-500 text-center">Войдите, чтобы увидеть свои изображения</p>
+      </div>
+    );
+  }
+
+  if (loading) {
+    return (
+      <div className="bg-white rounded-xl shadow-sm p-6">
+        <h3 className="text-lg font-medium mb-4">Галерея</h3>
+        <div className="text-center text-gray-500">Загрузка...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="bg-white rounded-xl shadow-sm p-6">
+        <h3 className="text-lg font-medium mb-4">Галерея</h3>
+        <div className="text-center text-red-500">{error}</div>
+      </div>
     );
   }
 
   return (
-    <Card>
-      <h2 className="text-xl font-bold mb-4">Ваша галерея</h2>
+    <div className="bg-white rounded-xl shadow-sm p-6">
+      <h3 className="text-lg font-medium mb-4">
+        Галерея ({images.length})
+      </h3>
       
-      {loading ? (
-        <div className="text-center py-8 text-gray-500">Загрузка...</div>
-      ) : images.length === 0 ? (
-        <div className="text-center py-8 text-gray-500">
-          Нет обработанных изображений
-        </div>
+      {images.length === 0 ? (
+        <p className="text-gray-500 text-center">
+          У вас пока нет изображений. Загрузите первое изображение для обработки!
+        </p>
       ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-          {images.map(img => (
-            <div 
-              key={img.id} 
-              className="aspect-square rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow"
-            >
-              <img 
-                src={`http://localhost:8080${img.url}`} 
-                alt={img.title}
-                className="w-full h-full object-cover"
+        <div className="grid grid-cols-2 gap-4">
+          {images.map((image) => (
+            <div key={image.id} className="relative group">
+              <img
+                src={image.original_url || image.url}
+                alt={image.title || 'Image'}
+                className="w-full h-32 object-cover rounded-lg"
               />
-              <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-2">
-                <div className="text-white text-xs font-medium truncate">{img.title}</div>
-                <div className="text-white/80 text-xs truncate">{img.style}</div>
-              </div>
+              <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all rounded-lg" />
             </div>
           ))}
         </div>
       )}
-    </Card>
+    </div>
   );
 }

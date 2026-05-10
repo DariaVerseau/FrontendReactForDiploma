@@ -8,17 +8,22 @@ export default function Header({ user, onLogout }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { login, register } = useAuth();
 
+  // ИСПРАВЛЕНО: передаём email и password как отдельные аргументы
   const handleLogin = async (email, password) => {
-    await login({ email, password });
+    await login(email, password);  // ← убраны фигурные скобки
   };
 
   const handleRegister = async (email, password) => {
-    await register({ email, password });
+    await register(email, password);  // ← убраны фигурные скобки
   };
 
   return (
     <header className="bg-white shadow-sm">
       <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
+        <div className="flex items-center gap-2 text-indigo-600 font-bold text-xl">
+          <FiUser size={24} />
+          <span>Smart Image Lab</span>
+        </div>
         
         {user ? (
           <div className="flex items-center gap-3">

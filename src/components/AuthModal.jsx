@@ -26,9 +26,9 @@ export default function AuthModal({
     
     try {
       if (isLoginMode) {
-        await onLogin(email, password);
+        await onLogin(email, password); // ← вызываем пропс
       } else {
-        await onRegister(email, password);
+        await onRegister(email, password); // ← вызываем пропс
       }
       onClose();
     } catch (error) {
@@ -82,9 +82,18 @@ export default function AuthModal({
                     required
                     className="block w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                     placeholder="example@mail.com"
+                    autoComplete="email"
                   />
                 </div>
               </div>
+
+              <input
+                type="text"
+                name="username"
+                autoComplete="username"
+                className="hidden"
+                value={email}
+              />
 
               {/* Пароль поле */}
               <div className="space-y-2">
@@ -102,6 +111,7 @@ export default function AuthModal({
                     required
                     className="block w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                     placeholder="••••••••"
+                    autoComplete={isLoginMode ? "current-password" : "new-password"}
                   />
                 </div>
               </div>
@@ -121,6 +131,7 @@ export default function AuthModal({
                       required
                       className="block w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                       placeholder="••••••••"
+                      autoComplete="new-password"
                     />
                   </div>
                 </div>
