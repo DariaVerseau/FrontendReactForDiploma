@@ -1,6 +1,7 @@
+// src/services/api.js
 import axios from 'axios';
 
-const API_BASE = '/api/v1'; 
+const API_BASE = '/api/v1';
 
 const api = axios.create({
   baseURL: API_BASE,
@@ -13,27 +14,79 @@ api.interceptors.request.use((config) => {
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
+  console.log(`API Request: ${config.method.toUpperCase()} ${config.url}`, config.data);
   return config;
 });
+
+api.interceptors.response.use(
+  (response) => {
+    console.log(`API Response: ${response.status} ${response.config.url}`, response.data);
+    return response;
+  },
+  (error) => {
+    console.error('API Error:', error.response?.status, error.response?.data);
+    return Promise.reject(error);
+  }
+);
 
 export const authApi = {
   login: (email, password) => api.post('/login', { email, password }),
   register: (email, password) => api.post('/register', { email, password })
 };
 
+// src/services/api.js
 export const imageApi = {
   upload: (file) => {
     const formData = new FormData();
     formData.append('image', file);
+    const title = file.name.replace(/\.[^/.]+$/, '');
+    formData.append('title', title);
+    // ✅ НЕ передаём style для обычной загрузки
+    console.log('Uploading file:', file.name);
     return api.post('/images', formData);
   },
+  
   process: (endpoint, file, params = {}) => {
     const formData = new FormData();
     formData.append('image', file);
-    Object.entries(params).forEach(([key, value]) => {
-      formData.append(key, value.toString());
-    });
+    const title = file.name.replace(/\.[^/.]+$/, '') + '_processed';
+    formData.append('title', title);
+    
+    // ✅ Передаём style ТОЛЬКО для style_transfer
+    if (endpoint === 'style_transfer' || endpoint === 'basic_style_transfer') {
+      const style = params.style || 'vangogh';
+      formData.append('style', style);
+    }
+    
+    // Для upscale добавляем scale
+    if (endpoint === 'upscale' && params.scale) {
+      formData.append('scale', params.scale.toString());
+    }
+    
+    // Для restore_portrait добавляем параметры
+    if (endpoint === 'restore_portrait') {
+      if (params.fidelity_weight) {
+        formData.append('fidelity_weight', params.fidelity_weight.toString());
+      }
+      if (params.postprocess !== undefined) {
+        formData.append('postprocess', params.postprocess.toString());
+      }
+    }
+    
+    // Для postprocess добавляем параметры
+    if (endpoint === 'postprocess') {
+      Object.entries(params).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) {
+          formData.append(key, value.toString());
+        }
+      });
+    }
+    
+    console.log(`Processing ${endpoint} with params:`, params);
     return api.post(`/ml/${endpoint}`, formData);
   },
+  
   getGallery: () => api.get('/images')
 };
+
+export default api;

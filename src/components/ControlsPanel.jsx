@@ -52,7 +52,7 @@ const OPERATIONS = [
     id: 'restore_portrait', 
     name: 'Восстановить портрет', 
     icon: FiStar, 
-    type: 'restore_portrait',
+    type: 'enhance',
     description: 'Восстановление деталей лица и текстуры'
   },
   { 
@@ -250,16 +250,24 @@ export default function ControlsPanel({
     return {};
   };
 
-  const handleOperationSelect = (operation) => {
-    if (operation.id === editingOperation?.id) {
-      setIsEditing(false);
-      setEditingOperation(null);
-    } else {
-      setIsEditing(true);
-      setEditingOperation(operation);
-      setSelectedParams(initParams(operation.id));
+const handleOperationSelect = (operation) => {
+  console.log('Operation clicked:', operation);
+  
+  if (operation.id === editingOperation?.id) {
+    console.log('Deselecting operation');
+    setIsEditing(false);
+    setEditingOperation(null);
+    if (onSelectOperation) {
+      onSelectOperation(null);
     }
-  };
+  } else {
+    console.log('Selecting new operation:', operation);
+    setIsEditing(true);
+    setEditingOperation(operation);
+    setSelectedParams(initParams(operation.id));
+    // Не вызываем onSelectOperation здесь - только после нажатия "Применить"
+  }
+};
 
   const handleParamChange = (paramId, value) => {
     setSelectedParams(prev => ({
@@ -268,10 +276,26 @@ export default function ControlsPanel({
     }));
   };
 
-  const handleApplyParams = () => {
+const handleApplyParams = () => {
+  console.log('=== Apply Params ===');
+  console.log('editingOperation:', editingOperation);
+  console.log('selectedParams:', selectedParams);
+  
+  // ✅ КРИТИЧЕСКИ ВАЖНО: передаём выбранную операцию в родительский компонент
+  if (onSelectOperation && editingOperation) {
+    console.log('Calling onSelectOperation with:', editingOperation);
+    onSelectOperation(editingOperation);
+  } else {
+    console.warn('onSelectOperation is not defined or editingOperation is null');
+  }
+  
+  // Передаём параметры
+  if (onOperationParamsChange && editingOperation) {
     onOperationParamsChange(editingOperation.id, selectedParams);
-    setIsEditing(false);
-  };
+  }
+  
+  setIsEditing(false);
+};
 
   // Render parameter controls based on operation type
   const renderParams = () => {

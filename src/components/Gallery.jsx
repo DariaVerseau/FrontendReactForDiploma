@@ -1,9 +1,10 @@
 // src/components/Gallery.jsx
 import { useState, useEffect } from 'react';
 import { imageApi } from '../services/api';
+import { FiImage } from 'react-icons/fi';
 
-export default function Gallery({ user }) {
-  const [images, setImages] = useState([]); // ← Убедитесь, что начальное значение [], а не null
+export default function Gallery({ user, refreshTrigger }) {
+  const [images, setImages] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -11,25 +12,32 @@ export default function Gallery({ user }) {
     if (user) {
       loadGallery();
     }
-  }, [user]);
+  }, [user, refreshTrigger]);
 
   const loadGallery = async () => {
     setLoading(true);
     setError(null);
     try {
       const response = await imageApi.getGallery();
-      // ✅ Защита: убеждаемся, что response.data - это массив
-      setImages(Array.isArray(response.data) ? response.data : []);
+      console.log('Gallery response:', response.data);
+      
+      let imagesArray = [];
+      if (Array.isArray(response.data)) {
+        imagesArray = response.data;
+      } else {
+        imagesArray = [];
+      }
+      
+      setImages(imagesArray);
     } catch (error) {
       console.error('Gallery load error:', error);
       setError('Не удалось загрузить галерею');
-      setImages([]); // ← Устанавливаем пустой массив при ошибке
+      setImages([]);
     } finally {
       setLoading(false);
     }
   };
 
-  // ✅ Защита при рендеринге
   if (!user) {
     return (
       <div className="bg-white rounded-xl shadow-sm p-6">
@@ -53,6 +61,12 @@ export default function Gallery({ user }) {
       <div className="bg-white rounded-xl shadow-sm p-6">
         <h3 className="text-lg font-medium mb-4">Галерея</h3>
         <div className="text-center text-red-500">{error}</div>
+        <button 
+          onClick={loadGallery}
+          className="mt-4 w-full py-2 bg-indigo-600 text-white rounded-lg"
+        >
+          Попробовать снова
+        </button>
       </div>
     );
   }
@@ -64,19 +78,32 @@ export default function Gallery({ user }) {
       </h3>
       
       {images.length === 0 ? (
-        <p className="text-gray-500 text-center">
-          У вас пока нет изображений. Загрузите первое изображение для обработки!
-        </p>
+        <div className="text-center py-8">
+          <FiImage className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+          <p className="text-gray-500">
+            У вас пока нет изображений.<br />
+            Загрузите первое изображение!
+          </p>
+        </div>
       ) : (
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 gap-4 max-h-[600px] overflow-y-auto">
           {images.map((image) => (
             <div key={image.id} className="relative group">
+              {/* ✅ ПРАВИЛЬНЫЙ URL */}
               <img
-                src={image.original_url || image.url}
+                src={`http://localhost:8080${image.url}`}
                 alt={image.title || 'Image'}
                 className="w-full h-32 object-cover rounded-lg"
+                onError={(e) => {
+                  console.error('Image load error for:', image.url);
+                  e.target.src = 'https://via.placeholder.com/150?text=Error';
+                }}
               />
-              <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all rounded-lg" />
+              {image.style && image.style !== 'original' && (
+                <div className="absolute bottom-1 right-1 bg-indigo-600 text-white text-xs px-1 rounded">
+                  {image.style}
+                </div>
+              )}
             </div>
           ))}
         </div>
