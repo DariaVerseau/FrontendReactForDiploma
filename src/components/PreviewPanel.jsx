@@ -2,6 +2,9 @@ import { useState, useEffect } from 'react';
 import { FiLoader, FiImage } from 'react-icons/fi';
 import Card from './ui/Card';
 
+// Локальная SVG-заглушка (не требует интернета)
+const getPlaceholderSVG = (text) => `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300' viewBox='0 0 300 300'%3E%3Crect width='300' height='300' fill='%23f3f4f6'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dy='.3em' fill='%239ca3af' font-size='14'%3E${encodeURIComponent(text)}%3C/text%3E%3C/svg%3E`;
+
 export default function PreviewPanel({ original, processed, isProcessing }) {
   const [originalUrl, setOriginalUrl] = useState(null);
 
@@ -11,21 +14,18 @@ export default function PreviewPanel({ original, processed, isProcessing }) {
       const url = URL.createObjectURL(original);
       setOriginalUrl(url);
       
-      // Очищаем URL при размонтировании или изменении файла
       return () => {
         if (url) {
           URL.revokeObjectURL(url);
         }
       };
     } else if (typeof original === 'string') {
-      // Если original это строка (URL)
       setOriginalUrl(original);
     } else {
       setOriginalUrl(null);
     }
   }, [original]);
 
-  // Очищаем processed URL если это object URL (не нужно для обычных HTTP URL)
   useEffect(() => {
     return () => {
       if (originalUrl && originalUrl.startsWith('blob:')) {
@@ -48,7 +48,7 @@ export default function PreviewPanel({ original, processed, isProcessing }) {
               className="w-full h-full object-contain"
               onError={(e) => {
                 console.error('Original image load error');
-                e.target.src = 'https://via.placeholder.com/300?text=Error';
+                e.target.src = getPlaceholderSVG('Ошибка загрузки');
               }}
             />
           ) : (
@@ -76,7 +76,7 @@ export default function PreviewPanel({ original, processed, isProcessing }) {
               className="w-full h-full object-contain"
               onError={(e) => {
                 console.error('Processed image load error:', processed);
-                e.target.src = 'https://via.placeholder.com/300?text=Error';
+                e.target.src = getPlaceholderSVG('Ошибка загрузки');
               }}
             />
           ) : (

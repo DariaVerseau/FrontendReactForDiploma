@@ -15,13 +15,14 @@ export default function App() {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
   const [originalPreview, setOriginalPreview] = useState(null);
+  const [originalImageId, setOriginalImageId] = useState(null); // ✅ Добавлено
   const [processedUrl, setProcessedUrl] = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isUploading, setIsUploading] = useState(false); // ✅ Добавлено
   const [selectedOperation, setSelectedOperation] = useState(null);
   const [refreshGallery, setRefreshGallery] = useState(0);
   
   // Состояния для параметров операций
-  const [operationParams, setOperationParams] = useState({});
   const [upscaleParams, setUpscaleParams] = useState({ scale: 2 });
   const [styleTransferParams, setStyleTransferParams] = useState({ 
     style: 'vangogh', 
@@ -39,23 +40,40 @@ export default function App() {
     denoise: true
   });
 
-  const handleFileSelect = (file) => {
-  if (file) {
+  // ✅ Загружаем оригинал сразу при выборе файла
+  const handleFileSelect = async (file) => {
+    if (!file) {
+      setSelectedFile(null);
+      setOriginalPreview(null);
+      setOriginalImageId(null);
+      setProcessedUrl(null);
+      return;
+    }
+    
     setSelectedFile(file);
     setProcessedUrl(null);
-    setOriginalPreview(file); 
-  } else {
-    setSelectedFile(null);
-    setOriginalPreview(null);
-    setProcessedUrl(null);
-  }
-};
+    setOriginalPreview(file);
+    setOriginalImageId(null);
+    
+    // Автоматическая загрузка оригинала при выборе файла
+    if (user) {
+      setIsUploading(true);
+      try {
+        const uploaded = await uploadImage(file);
+        setOriginalImageId(uploaded.id);
+        console.log('✅ Оригинал загружен, ID:', uploaded.id);
+      } catch (error) {
+        console.error('❌ Ошибка загрузки оригинала:', error);
+        alert('Не удалось загрузить изображение. Попробуйте ещё раз.');
+      } finally {
+        setIsUploading(false);
+      }
+    }
+  };
 
   const handleOperationParamsChange = (operationId, params) => {
     console.log('Params changed:', operationId, params);
-    setOperationParams(params);
     
-    // Сохраняем параметры для каждой операции
     if (operationId === 'enhance_quality') {
       setUpscaleParams(params);
     } else if (operationId === 'style_transfer') {
@@ -80,8 +98,9 @@ export default function App() {
     }
   };
 
+  // ✅ Обработка без повторной загрузки оригинала
   const handleProcess = async () => {
-    if (!selectedFile) {
+    if (!originalImageId && !selectedFile) {
       alert('Пожалуйста, выберите изображение');
       return;
     }
@@ -97,13 +116,24 @@ export default function App() {
       return;
     }
     
+    // Если оригинал ещё не загружен (например, не было авто-загрузки)
+    if (!originalImageId && selectedFile) {
+      setIsUploading(true);
+      try {
+        const uploaded = await uploadImage(selectedFile);
+        setOriginalImageId(uploaded.id);
+      } catch (error) {
+        alert('Не удалось загрузить изображение');
+        setIsUploading(false);
+        return;
+      } finally {
+        setIsUploading(false);
+      }
+    }
+    
     setIsProcessing(true);
     
     try {
-      // Сначала загружаем оригинал
-      const uploadedImage = await uploadImage(selectedFile);
-      console.log('Оригинал загружен:', uploadedImage);
-      
       // Определяем эндпоинт и параметры
       let endpoint = '';
       let params = {};
@@ -136,17 +166,21 @@ export default function App() {
           endpoint = 'process';
       }
       
-      console.log('🔄 Отправка на обработку:', { endpoint, params });
+      console.log('🔄 Отправка на обработку:', { endpoint, params, imageId: originalImageId });
       
-      // Отправляем на обработку
-      const result = await imageApi.process(endpoint, selectedFile, params);
+      // ✅ Отправляем на обработку с ID оригинала (не перезагружаем файл)
+      const result = await imageApi.processWithImageId(endpoint, originalImageId, params);
       console.log('✅ Обработка завершена:', result.data);
       
       // Устанавливаем URL обработанного изображения
       if (result.data.url) {
-        setProcessedUrl(`http://localhost:8080${result.data.url}`);
+        setProcessedUrl(`http://localhost:8080/${result.data.url}`);
       } else if (result.data.processed_url) {
-        setProcessedUrl(`http://localhost:8080${result.data.processed_url}`);
+        // Добавляем / если его нет
+        const processedUrl = result.data.processed_url.startsWith('/') 
+          ? result.data.processed_url 
+          : `/${result.data.processed_url}`;
+        setProcessedUrl(`http://localhost:8080${processedUrl}`);
       }
       
       // Обновляем галерею
@@ -172,23 +206,26 @@ export default function App() {
   };
 
   const handleSelectOperation = (operation) => {
-  console.log('=== Operation selected in App ===', operation);
-  setSelectedOperation(operation);
-};
+    console.log('=== Operation selected in App ===', operation);
+    setSelectedOperation(operation);
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
-    {/* Временная отладочная панель */}
+      {/* Временная отладочная панель */}
       <div className="fixed bottom-4 right-4 bg-gray-900 text-white p-3 rounded-lg text-xs z-50 font-mono shadow-lg">
         <div className="font-bold mb-1">🔍 Состояние:</div>
         <div>📁 File: {selectedFile ? selectedFile.name : '❌ null'}</div>
+        <div>🆔 Image ID: {originalImageId || '❌ null'}</div>
         <div>⚙️ Op: {selectedOperation ? selectedOperation.name : '❌ null'}</div>
         <div>🔄 Proc: {isProcessing ? 'true' : 'false'}</div>
+        <div>📤 Upload: {isUploading ? 'true' : 'false'}</div>
         <div>👤 User: {user ? '✅' : '❌'}</div>
         <button 
           onClick={() => {
             console.log('=== State ===');
             console.log('selectedFile:', selectedFile);
+            console.log('originalImageId:', originalImageId);
             console.log('selectedOperation:', selectedOperation);
             console.log('isProcessing:', isProcessing);
             console.log('user:', user);
@@ -198,6 +235,7 @@ export default function App() {
           Log State
         </button>
       </div>
+      
       <Header 
         user={user} 
         onLogin={() => setIsAuthModalOpen(true)}
@@ -214,18 +252,18 @@ export default function App() {
               <PreviewPanel 
                 original={originalPreview} 
                 processed={processedUrl} 
-                isProcessing={isProcessing} 
+                isProcessing={isProcessing || isUploading} 
               />
               
               <ControlsPanel
                 selectedOperation={selectedOperation}
-                onSelectOperation={handleSelectOperation}  // ← вместо setSelectedOperation
+                onSelectOperation={handleSelectOperation}
                 onOperationParamsChange={handleOperationParamsChange}
               />
               
               <button
                 onClick={handleProcessClick}
-                disabled={!selectedFile || !selectedOperation || isProcessing}
+                disabled={!selectedFile || !selectedOperation || isProcessing || isUploading}
                 className="w-full py-3 bg-indigo-600 text-white rounded-xl font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:bg-indigo-700 transition-colors"
               >
                 {isProcessing ? (
@@ -236,6 +274,8 @@ export default function App() {
                     </svg>
                     Обработка...
                   </span>
+                ) : isUploading ? (
+                  'Загрузка изображения...'
                 ) : (
                   'Обработать изображение'
                 )}

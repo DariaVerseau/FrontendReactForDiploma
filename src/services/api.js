@@ -34,25 +34,26 @@ export const authApi = {
   register: (email, password) => api.post('/register', { email, password })
 };
 
-// src/services/api.js
 export const imageApi = {
   upload: (file) => {
     const formData = new FormData();
     formData.append('image', file);
     const title = file.name.replace(/\.[^/.]+$/, '');
     formData.append('title', title);
-    // ✅ НЕ передаём style для обычной загрузки
     console.log('Uploading file:', file.name);
     return api.post('/images', formData);
   },
   
-  process: (endpoint, file, params = {}) => {
+  // ✅ НОВЫЙ МЕТОД: обработка по ID изображения (без повторной загрузки файла)
+  processWithImageId: (endpoint, imageId, params = {}) => {
     const formData = new FormData();
-    formData.append('image', file);
-    const title = file.name.replace(/\.[^/.]+$/, '') + '_processed';
+    formData.append('image_id', imageId);
+    
+    // Название для обработанного изображения
+    const title = `processed_${imageId}_${Date.now()}`;
     formData.append('title', title);
     
-    // ✅ Передаём style ТОЛЬКО для style_transfer
+    // Передаём style ТОЛЬКО для style_transfer
     if (endpoint === 'style_transfer' || endpoint === 'basic_style_transfer') {
       const style = params.style || 'vangogh';
       formData.append('style', style);
@@ -63,8 +64,8 @@ export const imageApi = {
       formData.append('scale', params.scale.toString());
     }
     
-    // Для restore_portrait добавляем параметры
-    if (endpoint === 'restore_portrait') {
+    // Для enhance (restore_portrait) добавляем параметры
+    if (endpoint === 'enhance') {
       if (params.fidelity_weight) {
         formData.append('fidelity_weight', params.fidelity_weight.toString());
       }
@@ -74,6 +75,43 @@ export const imageApi = {
     }
     
     // Для postprocess добавляем параметры
+    if (endpoint === 'postprocess') {
+      Object.entries(params).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) {
+          formData.append(key, value.toString());
+        }
+      });
+    }
+    
+    console.log(`Processing ${endpoint} with image_id: ${imageId}, params:`, params);
+    return api.post(`/ml/${endpoint}`, formData);
+  },
+  
+  // Старый метод (оставляем для обратной совместимости, но лучше использовать processWithImageId)
+  process: (endpoint, file, params = {}) => {
+    const formData = new FormData();
+    formData.append('image', file);
+    const title = file.name.replace(/\.[^/.]+$/, '') + '_processed';
+    formData.append('title', title);
+    
+    if (endpoint === 'style_transfer' || endpoint === 'basic_style_transfer') {
+      const style = params.style || 'vangogh';
+      formData.append('style', style);
+    }
+    
+    if (endpoint === 'upscale' && params.scale) {
+      formData.append('scale', params.scale.toString());
+    }
+    
+    if (endpoint === 'restore_portrait') {
+      if (params.fidelity_weight) {
+        formData.append('fidelity_weight', params.fidelity_weight.toString());
+      }
+      if (params.postprocess !== undefined) {
+        formData.append('postprocess', params.postprocess.toString());
+      }
+    }
+    
     if (endpoint === 'postprocess') {
       Object.entries(params).forEach(([key, value]) => {
         if (value !== undefined && value !== null) {

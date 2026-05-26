@@ -14,29 +14,29 @@ import Card from './ui/Card';
 
 // Все доступные стили для переноса
 const STYLE_OPTIONS = [
-  { id: 'vangogh', name: 'Ван Гог', image: '/styles/vangogh.jpg' },
-  { id: 'picasso', name: 'Пикассо', image: '/styles/picasso.jpg' },
-  { id: 'monet', name: 'Моне', image: '/styles/monet.jpg' },
-  { id: 'monet2', name: 'Моне 2', image: '/styles/monet2.jpg' },
-  { id: 'erinHanson', name: 'Эрин Хенсон', image: '/styles/erinHanson.jpg' },
-  { id: 'antimonocromatismo', name: 'Анти-монохроматизм', image: '/styles/antimonocromatismo.jpg' },
-  { id: 'asheville', name: 'Ашвилл', image: '/styles/asheville.jpg' },
-  { id: 'brushstrokes', name: 'Мазки кисти', image: '/styles/brushstrokes.jpg' },
-  { id: 'contrast_of_forms', name: 'Контраст форм', image: '/styles/contrast_of_forms.jpg' },
-  { id: 'en_campo_gris', name: 'В поле серого', image: '/styles/en_campo_gris.jpg' },
-  { id: 'goeritz', name: 'Гоэритц', image: '/styles/goeritz.jpg' },
-  { id: 'impronte_d_artista', name: 'Отпечатки художника', image: '/styles/impronte_d_artista.jpg' },
-  { id: 'la_muse', name: 'Ла Муза', image: '/styles/la_muse.jpg' },
-  { id: 'mondrian_cropped', name: 'Мондриан (обрезанный)', image: '/styles/mondrian_cropped.jpg' },
-  { id: 'picasso_seated_nude_hr', name: 'Пикассо (сидячий обнаженный)', image: '/styles/picasso_seated_nude_hr.jpg' },
-  { id: 'picasso_self_portrait', name: 'Пикассо (автопортрет)', image: '/styles/picasso_self_portrait.jpg' },
-  { id: 'scene_de_rue', name: 'Уличная сцена', image: '/styles/scene_de_rue.jpg' },
-  { id: 'sketch', name: 'Эскиз', image: '/styles/sketch.jpg' },
-  { id: 'the_resevoir_at_poitiers', name: 'Резервуар в Пуатье', image: '/styles/the_resevoir_at_poitiers.jpg' },
-  { id: 'trial', name: 'Эксперимент', image: '/styles/trial.jpg' },
-  { id: 'woman_in_peasant_dress_cropped', name: 'Женщина в крестьянском платье (обрезанная)', image: '/styles/woman_in_peasant_dress_cropped.jpg' },
-  { id: 'woman_in_peasant_dress', name: 'Женщина в крестьянском платье', image: '/styles/woman_in_peasant_dress.jpg' },
-  { id: 'woman_with_hat_matisse', name: 'Женщина с шляпой (Матисс)', image: '/styles/woman_with_hat_matisse.jpg' }
+  { id: 'vangogh', name: 'Ван Гог', image: '/style/vangogh.jpg' },
+  { id: 'picasso', name: 'Пикассо', image: '/style/picasso.jpg' },
+  { id: 'monet', name: 'Моне', image: '/style/monet.jpg' },
+  { id: 'monet2', name: 'Моне 2', image: '/style/monet2.jpg' },
+  { id: 'erinHanson', name: 'Эрин Хенсон', image: '/style/erinHanson.jpg' },
+  { id: 'antimonocromatismo', name: 'Анти-монохроматизм', image: '/style/antimonocromatismo.jpg' },
+  { id: 'asheville', name: 'Ашвилл', image: '/style/asheville.jpg' },
+  { id: 'brushstrokes', name: 'Мазки кисти', image: '/style/brushstrokes.jpg' },
+  { id: 'contrast_of_forms', name: 'Контраст форм', image: '/style/contrast_of_forms.jpg' },
+  { id: 'en_campo_gris', name: 'В поле серого', image: '/style/en_campo_gris.jpg' },
+  { id: 'goeritz', name: 'Гоэритц', image: '/style/goeritz.jpg' },
+  { id: 'impronte_d_artista', name: 'Отпечатки художника', image: '/style/impronte_d_artista.jpg' },
+  { id: 'la_muse', name: 'Ла Муза', image: '/style/la_muse.jpg' },
+  { id: 'mondrian_cropped', name: 'Мондриан (обрезанный)', image: '/style/mondrian_cropped.jpg' },
+  { id: 'picasso_seated_nude_hr', name: 'Пикассо (сидячий обнаженный)', image: '/style/picasso_seated_nude_hr.jpg' },
+  { id: 'picasso_self_portrait', name: 'Пикассо (автопортрет)', image: '/style/picasso_self_portrait.jpg' },
+  { id: 'scene_de_rue', name: 'Уличная сцена', image: '/style/scene_de_rue.jpg' },
+  { id: 'sketch', name: 'Эскиз', image: '/style/sketch.png' },
+  { id: 'the_resevoir_at_poitiers', name: 'Резервуар в Пуатье', image: '/style/the_resevoir_at_poitiers.jpg' },
+  { id: 'trial', name: 'Эксперимент', image: '/style/trial.jpg' },
+  { id: 'woman_in_peasant_dress_cropped', name: 'Женщина в крестьянском платье (обрезанная)', image: '/style/woman_in_peasant_dress_cropped.jpg' },
+  { id: 'woman_in_peasant_dress', name: 'Женщина в крестьянском платье', image: '/style/woman_in_peasant_dress.jpg' },
+  { id: 'woman_with_hat_matisse', name: 'Женщина с шляпой (Матисс)', image: '/style/woman_with_hat_matisse.jpg' }
 ];
 
 // Все типы операций
@@ -166,9 +166,9 @@ function Modal({ isOpen, onClose, children }) {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-xl p-6 w-full max-w-4xl mx-4">
-        <div className="flex justify-between items-center mb-4">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-xl w-full max-w-5xl max-h-[90vh] flex flex-col">
+        <div className="flex justify-between items-center p-4 border-b">
           <h3 className="text-lg font-medium">Выберите стиль</h3>
           <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
             <span className="sr-only">Закрыть</span>
@@ -177,7 +177,9 @@ function Modal({ isOpen, onClose, children }) {
             </svg>
           </button>
         </div>
-        {children}
+        <div className="overflow-y-auto p-4">
+          {children}
+        </div>
       </div>
     </div>
   );
@@ -187,30 +189,25 @@ function Modal({ isOpen, onClose, children }) {
 function StyleGalleryModal({ isOpen, onClose, onSelectStyle, selectedStyle }) {
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
         {STYLE_OPTIONS.map(style => (
           <div
             key={style.id}
-            className={`relative cursor-pointer rounded-lg overflow-hidden border-2 ${
-              selectedStyle === style.id ? 'border-indigo-600' : 'border-gray-200'
+            className={`relative cursor-pointer rounded-lg overflow-hidden border-2 transition-all hover:scale-105 ${
+              selectedStyle === style.id ? 'border-indigo-600 ring-2 ring-indigo-300' : 'border-gray-200'
             }`}
             onClick={() => onSelectStyle(style.id)}
           >
-            <div className="aspect-square overflow-hidden">
-              {style.image ? (
-                <img 
-                  src={style.image} 
-                  alt={style.name}
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <div className="bg-gray-100 w-full h-full flex items-center justify-center">
-                  <span className="text-gray-500 text-sm">Нет изображения</span>
-                </div>
-              )}
+            <div className="aspect-square overflow-hidden bg-gray-100">
+              <img 
+                src={style.image} 
+                alt={style.name}
+                className="w-full h-full object-cover"
+                // onError удалён
+              />
             </div>
-            <div className="p-2 bg-white">
-              <p className="text-sm font-medium text-center">{style.name}</p>
+            <div className="p-2 bg-white text-center">
+              <p className="text-sm font-medium truncate">{style.name}</p>
             </div>
           </div>
         ))}
