@@ -95,6 +95,14 @@ const RESTORE_PORTAIT_PARAMS = [
     type: 'boolean',
     defaultValue: true,
     label: 'Применить классическую постобработку'
+  },
+  
+  {
+    id: 'colorize',
+    name: 'Раскрашивание',
+    type: 'boolean',
+    defaultValue: false,
+    label: 'Автоматическое раскрашивание чёрно-белых фотографий'
   }
 ];
 
@@ -278,7 +286,7 @@ const handleApplyParams = () => {
   console.log('editingOperation:', editingOperation);
   console.log('selectedParams:', selectedParams);
   
-  // ✅ КРИТИЧЕСКИ ВАЖНО: передаём выбранную операцию в родительский компонент
+  //КРИТИЧЕСКИ ВАЖНО: передаём выбранную операцию в родительский компонент
   if (onSelectOperation && editingOperation) {
     console.log('Calling onSelectOperation with:', editingOperation);
     onSelectOperation(editingOperation);
@@ -396,49 +404,63 @@ const handleApplyParams = () => {
     }
     
     if (editingOperation.id === 'restore_portrait') {
-      return (
-        <div className="space-y-4">
-          {/* Баланс */}
-          <div className="space-y-2">
-            <label className="block text-sm font-medium text-gray-700">
-              Баланс качества и оригинала
-            </label>
-            <div className="flex items-center space-x-2">
-              {RESTORE_PORTAIT_PARAMS[0].options.map(option => (
-                <button
-                  key={option.value}
-                  onClick={() => handleParamChange('fidelity_weight', option.value)}
-                  className={`px-2 py-1 rounded-md text-xs font-medium ${
-                    selectedParams.fidelity_weight === option.value
-                      ? 'bg-indigo-600 text-white'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }`}
-                >
-                  {option.value}
-                </button>
-              ))}
-            </div>
-            <div className="mt-2 text-sm text-gray-600">
-              {RESTORE_PORTAIT_PARAMS[0].options.find(o => o.value === selectedParams.fidelity_weight)?.label}
-            </div>
-          </div>
-          
-          {/* Постобработка */}
-          <div className="flex items-center">
-            <input
-              type="checkbox"
-              id="postprocess"
-              checked={selectedParams.postprocess || true}
-              onChange={(e) => handleParamChange('postprocess', e.target.checked)}
-              className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-            />
-            <label htmlFor="postprocess" className="ml-2 block text-sm text-gray-700">
-              Применить классическую постобработку
-            </label>
-          </div>
+  return (
+    <div className="space-y-4">
+      {/* Баланс */}
+      <div className="space-y-2">
+        <label className="block text-sm font-medium text-gray-700">
+          Баланс качества и оригинала
+        </label>
+        <div className="flex items-center space-x-2">
+          {RESTORE_PORTAIT_PARAMS[0].options.map(option => (
+            <button
+              key={option.value}
+              onClick={() => handleParamChange('fidelity_weight', option.value)}
+              className={`px-2 py-1 rounded-md text-xs font-medium ${
+                selectedParams.fidelity_weight === option.value
+                  ? 'bg-indigo-600 text-white'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              {option.value}
+            </button>
+          ))}
         </div>
-      );
-    }
+        <div className="mt-2 text-sm text-gray-600">
+          {RESTORE_PORTAIT_PARAMS[0].options.find(o => o.value === selectedParams.fidelity_weight)?.label}
+        </div>
+      </div>
+      
+      {/* Постобработка */}
+      <div className="flex items-center">
+        <input
+          type="checkbox"
+          id="postprocess"
+          checked={selectedParams.postprocess ?? true}
+          onChange={(e) => handleParamChange('postprocess', e.target.checked)}
+          className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+        />
+        <label htmlFor="postprocess" className="ml-2 block text-sm text-gray-700">
+          Применить классическую постобработку
+        </label>
+      </div>
+
+      <div className="flex items-center">
+        <input
+          type="checkbox"
+          id="colorize"
+          checked={selectedParams.colorize ?? false}
+          onChange={(e) => handleParamChange('colorize', e.target.checked)}
+          className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+        />
+        <label htmlFor="colorize" className="ml-2 block text-sm text-gray-700">
+           Раскрасить чёрно-белые фотографии
+        </label>
+        <span className="ml-2 text-xs text-gray-400">(требует выровненное лицо 512x512)</span>
+      </div>
+    </div>
+  );
+}
     
     if (editingOperation.id === 'postprocess') {
       return (

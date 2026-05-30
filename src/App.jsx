@@ -15,10 +15,10 @@ export default function App() {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
   const [originalPreview, setOriginalPreview] = useState(null);
-  const [originalImageId, setOriginalImageId] = useState(null); // ✅ Добавлено
+  const [originalImageId, setOriginalImageId] = useState(null); 
   const [processedUrl, setProcessedUrl] = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [isUploading, setIsUploading] = useState(false); // ✅ Добавлено
+  const [isUploading, setIsUploading] = useState(false); 
   const [selectedOperation, setSelectedOperation] = useState(null);
   const [refreshGallery, setRefreshGallery] = useState(0);
   
@@ -29,10 +29,11 @@ export default function App() {
     alpha: 1.0, 
     preserve_color: false 
   });
-  const [restorePortraitParams, setRestorePortraitParams] = useState({
-    fidelity_weight: 0.5,
-    postprocess: true
-  });
+ const [restorePortraitParams, setRestorePortraitParams] = useState({
+  fidelity_weight: 0.5,
+  postprocess: true,
+  colorize: false           
+});
   const [postProcessParams, setPostProcessParams] = useState({
     sharpness: 1.25,
     contrast: 1.12,
@@ -40,7 +41,7 @@ export default function App() {
     denoise: true
   });
 
-  // ✅ Загружаем оригинал сразу при выборе файла
+  // Загружаем оригинал сразу при выборе файла
   const handleFileSelect = async (file) => {
     if (!file) {
       setSelectedFile(null);
@@ -79,7 +80,7 @@ export default function App() {
     } else if (operationId === 'style_transfer') {
       setStyleTransferParams(params);
     } else if (operationId === 'restore_portrait') {
-      setRestorePortraitParams(params);
+    setRestorePortraitParams(params);
     } else if (operationId === 'postprocess') {
       setPostProcessParams(params);
     }
@@ -155,7 +156,8 @@ export default function App() {
           endpoint = 'enhance';
           params = {
             fidelity_weight: restorePortraitParams.fidelity_weight,
-            postprocess: restorePortraitParams.postprocess
+            postprocess: restorePortraitParams.postprocess,
+            colorize: restorePortraitParams.colorize,           
           };
           break;
         case 'postprocess':

@@ -66,13 +66,18 @@ export const imageApi = {
     
     // Для enhance (restore_portrait) добавляем параметры
     if (endpoint === 'enhance') {
-      if (params.fidelity_weight) {
+    if (params.fidelity_weight !== undefined) {
         formData.append('fidelity_weight', params.fidelity_weight.toString());
-      }
-      if (params.postprocess !== undefined) {
-        formData.append('postprocess', params.postprocess.toString());
-      }
     }
+    if (params.postprocess !== undefined) {
+        formData.append('postprocess', params.postprocess.toString());
+    }
+  
+    if (params.colorize !== undefined) {
+        console.log('Adding colorize:', params.colorize);  // ← добавить для отладки
+        formData.append('colorize', params.colorize.toString());
+    }
+}
     
     // Для postprocess добавляем параметры
     if (endpoint === 'postprocess') {
@@ -81,6 +86,16 @@ export const imageApi = {
           formData.append(key, value.toString());
         }
       });
+    }
+    
+    console.log('🔍 Sending to backend:');
+    console.log('  endpoint:', endpoint);
+    console.log('  image_id:', imageId);
+    console.log('  params:', params);
+    
+    // Выведите содержимое FormData
+    for (let pair of formData.entries()) {
+        console.log('  formData:', pair[0], pair[1]);
     }
     
     console.log(`Processing ${endpoint} with image_id: ${imageId}, params:`, params);
@@ -103,14 +118,18 @@ export const imageApi = {
       formData.append('scale', params.scale.toString());
     }
     
-    if (endpoint === 'restore_portrait') {
-      if (params.fidelity_weight) {
-        formData.append('fidelity_weight', params.fidelity_weight.toString());
-      }
-      if (params.postprocess !== undefined) {
-        formData.append('postprocess', params.postprocess.toString());
-      }
+    if (endpoint === 'enhance') {
+    if (params.fidelity_weight !== undefined) {
+      formData.append('fidelity_weight', params.fidelity_weight.toString());
     }
+    if (params.postprocess !== undefined) {
+      formData.append('postprocess', params.postprocess.toString());
+    }
+    
+    if (params.colorize !== undefined) {
+      formData.append('colorize', params.colorize.toString());
+    }
+  }
     
     if (endpoint === 'postprocess') {
       Object.entries(params).forEach(([key, value]) => {
