@@ -9,16 +9,19 @@ import UploadPanel from './components/UploadPanel';
 import PreviewPanel from './components/PreviewPanel';
 import ControlsPanel from './components/ControlsPanel';
 import Gallery from './components/Gallery';
+import { ToastProvider, useToast } from './components/ToastContainer';
 
-export default function App() {
+// Внутренний компонент с логикой
+function AppContent() {
   const { user, login, register, logout } = useAuth();
+  const { showToast } = useToast(); // ← добавляем Toast
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
   const [originalPreview, setOriginalPreview] = useState(null);
-  const [originalImageId, setOriginalImageId] = useState(null); 
+  const [originalImageId, setOriginalImageId] = useState(null);
   const [processedUrl, setProcessedUrl] = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [isUploading, setIsUploading] = useState(false); 
+  const [isUploading, setIsUploading] = useState(false);
   const [selectedOperation, setSelectedOperation] = useState(null);
   const [refreshGallery, setRefreshGallery] = useState(0);
   
@@ -29,11 +32,11 @@ export default function App() {
     alpha: 1.0, 
     preserve_color: false 
   });
- const [restorePortraitParams, setRestorePortraitParams] = useState({
-  fidelity_weight: 0.5,
-  postprocess: true,
-  colorize: false           
-});
+  const [restorePortraitParams, setRestorePortraitParams] = useState({
+    fidelity_weight: 0.5,
+    postprocess: true,
+    colorize: false
+  });
   const [postProcessParams, setPostProcessParams] = useState({
     sharpness: 1.25,
     contrast: 1.12,
@@ -56,16 +59,16 @@ export default function App() {
     setOriginalPreview(file);
     setOriginalImageId(null);
     
-    // Автоматическая загрузка оригинала при выборе файла
     if (user) {
       setIsUploading(true);
       try {
         const uploaded = await uploadImage(file);
         setOriginalImageId(uploaded.id);
         console.log('✅ Оригинал загружен, ID:', uploaded.id);
+        showToast('Изображение загружено!', 'success');
       } catch (error) {
         console.error('❌ Ошибка загрузки оригинала:', error);
-        alert('Не удалось загрузить изображение. Попробуйте ещё раз.');
+        showToast('Не удалось загрузить изображение', 'error');
       } finally {
         setIsUploading(false);
       }
@@ -80,7 +83,7 @@ export default function App() {
     } else if (operationId === 'style_transfer') {
       setStyleTransferParams(params);
     } else if (operationId === 'restore_portrait') {
-    setRestorePortraitParams(params);
+      setRestorePortraitParams(params);
     } else if (operationId === 'postprocess') {
       setPostProcessParams(params);
     }
@@ -99,32 +102,29 @@ export default function App() {
     }
   };
 
-  // ✅ Обработка без повторной загрузки оригинала
   const handleProcess = async () => {
     if (!originalImageId && !selectedFile) {
-      alert('Пожалуйста, выберите изображение');
+      showToast('Пожалуйста, выберите изображение', 'error');
       return;
     }
     
     if (!selectedOperation) {
-      alert('Пожалуйста, выберите операцию обработки');
+      showToast('Пожалуйста, выберите операцию обработки', 'error');
       return;
     }
     
     if (!user) {
-      alert('Пожалуйста, войдите в систему');
       setIsAuthModalOpen(true);
       return;
     }
     
-    // Если оригинал ещё не загружен (например, не было авто-загрузки)
     if (!originalImageId && selectedFile) {
       setIsUploading(true);
       try {
         const uploaded = await uploadImage(selectedFile);
         setOriginalImageId(uploaded.id);
       } catch (error) {
-        alert('Не удалось загрузить изображение');
+        showToast('Не удалось загрузить изображение', 'error');
         setIsUploading(false);
         return;
       } finally {
@@ -135,7 +135,6 @@ export default function App() {
     setIsProcessing(true);
     
     try {
-      // Определяем эндпоинт и параметры
       let endpoint = '';
       let params = {};
       
@@ -157,7 +156,7 @@ export default function App() {
           params = {
             fidelity_weight: restorePortraitParams.fidelity_weight,
             postprocess: restorePortraitParams.postprocess,
-            colorize: restorePortraitParams.colorize,           
+            colorize: restorePortraitParams.colorize,
           };
           break;
         case 'postprocess':
@@ -170,30 +169,25 @@ export default function App() {
       
       console.log('🔄 Отправка на обработку:', { endpoint, params, imageId: originalImageId });
       
-      // ✅ Отправляем на обработку с ID оригинала (не перезагружаем файл)
       const result = await imageApi.processWithImageId(endpoint, originalImageId, params);
       console.log('✅ Обработка завершена:', result.data);
       
-      // Устанавливаем URL обработанного изображения
       if (result.data.url) {
         setProcessedUrl(`http://localhost:8080/${result.data.url}`);
       } else if (result.data.processed_url) {
-        // Добавляем / если его нет
         const processedUrl = result.data.processed_url.startsWith('/') 
           ? result.data.processed_url 
           : `/${result.data.processed_url}`;
         setProcessedUrl(`http://localhost:8080${processedUrl}`);
       }
       
-      // Обновляем галерею
       setRefreshGallery(prev => prev + 1);
-      
-      alert('Изображение успешно обработано!');
+      showToast('Изображение успешно обработано!', 'success');
       
     } catch (error) {
       console.error('❌ Ошибка обработки:', error);
       const errorMsg = error.response?.data?.error || error.message || 'Ошибка обработки изображения';
-      alert(`Ошибка: ${errorMsg}`);
+      showToast(errorMsg, 'error');
     } finally {
       setIsProcessing(false);
     }
@@ -214,30 +208,6 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Временная отладочная панель */}
-      <div className="fixed bottom-4 right-4 bg-gray-900 text-white p-3 rounded-lg text-xs z-50 font-mono shadow-lg">
-        <div className="font-bold mb-1">🔍 Состояние:</div>
-        <div>📁 File: {selectedFile ? selectedFile.name : '❌ null'}</div>
-        <div>🆔 Image ID: {originalImageId || '❌ null'}</div>
-        <div>⚙️ Op: {selectedOperation ? selectedOperation.name : '❌ null'}</div>
-        <div>🔄 Proc: {isProcessing ? 'true' : 'false'}</div>
-        <div>📤 Upload: {isUploading ? 'true' : 'false'}</div>
-        <div>👤 User: {user ? '✅' : '❌'}</div>
-        <button 
-          onClick={() => {
-            console.log('=== State ===');
-            console.log('selectedFile:', selectedFile);
-            console.log('originalImageId:', originalImageId);
-            console.log('selectedOperation:', selectedOperation);
-            console.log('isProcessing:', isProcessing);
-            console.log('user:', user);
-          }}
-          className="mt-2 bg-blue-600 px-2 py-1 rounded text-white text-xs w-full"
-        >
-          Log State
-        </button>
-      </div>
-      
       <Header 
         user={user} 
         onLogin={() => setIsAuthModalOpen(true)}
@@ -246,7 +216,6 @@ export default function App() {
 
       <main className="max-w-7xl mx-auto px-4 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Левая колонка */}
           <div className="space-y-8">
             <UploadPanel onFileSelect={handleFileSelect} />
             
@@ -285,7 +254,6 @@ export default function App() {
             </div>
           </div>
           
-          {/* Правая колонка - Галерея */}
           <Gallery user={user} refreshTrigger={refreshGallery} />
         </div>
       </main>
@@ -297,5 +265,14 @@ export default function App() {
         onRegister={register}
       />
     </div>
+  );
+}
+
+// Главный компонент с ToastProvider
+export default function App() {
+  return (
+    <ToastProvider>
+      <AppContent />
+    </ToastProvider>
   );
 }

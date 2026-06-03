@@ -29,9 +29,16 @@ api.interceptors.response.use(
   }
 );
 
+// src/services/api.js
 export const authApi = {
   login: (email, password) => api.post('/login', { email, password }),
-  register: (email, password) => api.post('/register', { email, password })
+  register: (email, password) => api.post('/register', { email, password }),
+  
+  changePassword: (oldPassword, newPassword) => 
+    api.post('/change-password', { 
+      old_password: oldPassword, 
+      new_password: newPassword 
+    }),
 };
 
 export const imageApi = {
@@ -44,42 +51,40 @@ export const imageApi = {
     return api.post('/images', formData);
   },
   
-  // ✅ НОВЫЙ МЕТОД: обработка по ID изображения (без повторной загрузки файла)
+  // ✅ НОВЫЙ МЕТОД: обработка по ID изображения
   processWithImageId: (endpoint, imageId, params = {}) => {
     const formData = new FormData();
     formData.append('image_id', imageId);
     
-    // Название для обработанного изображения
     const title = `processed_${imageId}_${Date.now()}`;
     formData.append('title', title);
     
-    // Передаём style ТОЛЬКО для style_transfer
+    // Для style_transfer
     if (endpoint === 'style_transfer' || endpoint === 'basic_style_transfer') {
       const style = params.style || 'vangogh';
       formData.append('style', style);
     }
     
-    // Для upscale добавляем scale
+    // Для upscale
     if (endpoint === 'upscale' && params.scale) {
       formData.append('scale', params.scale.toString());
     }
     
-    // Для enhance (restore_portrait) добавляем параметры
+    // ✅ Для enhance (restore_portrait) — ИСПРАВЛЕНА СКОБКА
     if (endpoint === 'enhance') {
-    if (params.fidelity_weight !== undefined) {
+      if (params.fidelity_weight !== undefined) {
         formData.append('fidelity_weight', params.fidelity_weight.toString());
-    }
-    if (params.postprocess !== undefined) {
+      }
+      if (params.postprocess !== undefined) {
         formData.append('postprocess', params.postprocess.toString());
-    }
-  
-    if (params.colorize !== undefined) {
-        console.log('Adding colorize:', params.colorize);  // ← добавить для отладки
+      }
+      if (params.colorize !== undefined) {
+        console.log('Adding colorize:', params.colorize);
         formData.append('colorize', params.colorize.toString());
+      }
     }
-}
     
-    // Для postprocess добавляем параметры
+    // Для postprocess
     if (endpoint === 'postprocess') {
       Object.entries(params).forEach(([key, value]) => {
         if (value !== undefined && value !== null) {
@@ -88,21 +93,24 @@ export const imageApi = {
       });
     }
     
-    console.log('🔍 Sending to backend:');
+    console.log('📤 Sending to backend:');
     console.log('  endpoint:', endpoint);
     console.log('  image_id:', imageId);
     console.log('  params:', params);
     
-    // Выведите содержимое FormData
     for (let pair of formData.entries()) {
-        console.log('  formData:', pair[0], pair[1]);
+      console.log('  formData:', pair[0], pair[1]);
     }
     
-    console.log(`Processing ${endpoint} with image_id: ${imageId}, params:`, params);
     return api.post(`/ml/${endpoint}`, formData);
   },
   
-  // Старый метод (оставляем для обратной совместимости, но лучше использовать processWithImageId)
+  // ✅ ГАЛЕРЕЯ С ПАГИНАЦИЕЙ
+  getGallery: (page = 1, limit = 20) => {
+    return api.get(`/images?page=${page}&limit=${limit}`);
+  },
+  
+  // Старый метод (для обратной совместимости)
   process: (endpoint, file, params = {}) => {
     const formData = new FormData();
     formData.append('image', file);
@@ -119,17 +127,16 @@ export const imageApi = {
     }
     
     if (endpoint === 'enhance') {
-    if (params.fidelity_weight !== undefined) {
-      formData.append('fidelity_weight', params.fidelity_weight.toString());
+      if (params.fidelity_weight !== undefined) {
+        formData.append('fidelity_weight', params.fidelity_weight.toString());
+      }
+      if (params.postprocess !== undefined) {
+        formData.append('postprocess', params.postprocess.toString());
+      }
+      if (params.colorize !== undefined) {
+        formData.append('colorize', params.colorize.toString());
+      }
     }
-    if (params.postprocess !== undefined) {
-      formData.append('postprocess', params.postprocess.toString());
-    }
-    
-    if (params.colorize !== undefined) {
-      formData.append('colorize', params.colorize.toString());
-    }
-  }
     
     if (endpoint === 'postprocess') {
       Object.entries(params).forEach(([key, value]) => {
@@ -141,9 +148,7 @@ export const imageApi = {
     
     console.log(`Processing ${endpoint} with params:`, params);
     return api.post(`/ml/${endpoint}`, formData);
-  },
-  
-  getGallery: () => api.get('/images')
+  }
 };
 
 export default api;
