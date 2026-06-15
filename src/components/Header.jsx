@@ -4,6 +4,7 @@ import { FiUser, FiLogOut, FiKey } from 'react-icons/fi';
 import AuthModal from './AuthModal';
 import ChangePasswordModal from './ChangePasswordModal';
 import { useAuth } from '../hooks/useAuth';
+import { Link } from 'react-router-dom';
 
 export default function Header({ user, onLogout }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -33,17 +34,16 @@ export default function Header({ user, onLogout }) {
 
   return (
     <>
-      {/* ✅ FIXED HEADER — прилипает к верху */}
       <header className="sticky top-0 z-50 bg-white shadow-sm">
         <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
           {/* Логотип */}
-          <div className="flex items-center gap-2 text-indigo-600 font-bold text-xl">
+          <Link to="/" className="flex items-center gap-2 text-indigo-600 font-bold text-xl">
             <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
                 d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
             </svg>
             <span>Smart Image Lab</span>
-          </div>
+          </Link>
 
           {/* Правая часть с авторизацией */}
           <div className="relative">

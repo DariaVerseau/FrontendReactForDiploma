@@ -13,7 +13,6 @@ export default function Gallery({ user, refreshTrigger }) {
   const [showPageDropdown, setShowPageDropdown] = useState(false);
   const dropdownRef = useRef(null);
   
-  // ✅ ИЗМЕНЕНО: 6 изображений на странице вместо 20
   const limit = 6;
 
   useEffect(() => {
